@@ -1,4 +1,4 @@
-# 社团管理系统
+# Vue-template
 
 > A Vue.js project
 
