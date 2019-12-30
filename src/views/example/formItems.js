@@ -29,22 +29,22 @@ export const formItems = [
       return Model.hobby === "2";
     },
   },
-  // {
-  //   tag: "select",
-  //   itemAttrs: {
-  //     label: "兴趣",
-  //   },
-  //   attrs: {
-  //     key: "hobby",
-  //     value: "2",
-  //     placeholder: "请输入兴趣",
-  //     options: [
-  //       { value: "1", label: "吃饭" },
-  //       { value: "2", label: "睡觉" },
-  //       { value: "3", label: "打豆豆" },
-  //     ]
-  //   }
-  // },
+  {
+    tag: "select",
+    itemAttrs: {
+      label: "兴趣",
+    },
+    attrs: {
+      key: "hobby",
+      value: "2",
+      placeholder: "请输入兴趣",
+      options: [
+        { value: "1", label: "吃饭" },
+        { value: "2", label: "睡觉" },
+        { value: "3", label: "打豆豆" },
+      ]
+    }
+  },
   {
     tag: "date",
     itemAttrs: {
@@ -67,17 +67,6 @@ export const formItems = [
         { value: "1", label: "男" },
         { value: "2", label: "女" },
       ]
-    }
-  },
-  {
-    tag: "radio",
-    itemAttrs: {
-      label: "调用后端接口-单选框",
-    },
-    attrs: {
-      value: "1",
-      key: "asyncRadio",
-      options: []
     }
   },
   {
@@ -118,6 +107,12 @@ export const formItems = [
     }
   },
   {
+    slot: 'colorPicker',
+    itemAttrs: {
+      label: '颜色选择器'
+    }
+  },
+  {
     tag: "textarea",
     itemAttrs: {
       label: "文本框",
@@ -126,5 +121,4 @@ export const formItems = [
       key: "textarea",
     }
   }
-];
-//# sourceMappingURL=formItems.js.map
+]

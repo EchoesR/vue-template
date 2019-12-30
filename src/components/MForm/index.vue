@@ -3,39 +3,45 @@
     v-bind="$attrs"
     :model="Model"
     :ref="form"
-    :api="api"
     :show-message="showMessage"
     :status-icon="statusIcon"
+    :size="size"
+    :label-width="labelWitdh"
     :inline="inline"
   >
-    <template v-for="(item, index) in _formItems">
-      <slot v-if="item.slot" :name="item.slot" />
-
-      <el-form-item
-        :key="index + item.attrs.key"
-        v-else-if="item._ifRender"
-        :class="item.itemAttrs.className"
-        v-bind="item.itemAttrs || {}"
-        :prop="item.attrs.key"
-      >
+    <el-row :gutter="gutter">
+      <template v-for="(item, index) in _formItems">
         <component
-          :is="item.tag"
-          :class="item.itemAttrs.className"
-          v-model="Model[item.attrs.key]"
-          v-bind="item.attrs || {}"
-          v-on="item.listeners || {}"
-        />
-      </el-form-item>
-    </template>
-
-    <el-form-item v-if="submit || reset">
-      <el-button @click="handleSubmit" v-if="submit">{{
-        $attrs.searchContext || "搜索"
-      }}</el-button>
-      <el-button @click="handleReset" v-if="reset">{{
-        $attrs.resetContext || "重置"
-      }}</el-button>
-    </el-form-item>
+          :is="inline ? 'span' : 'el-col'"
+          :key="index + item.attrs.key || item.slot"
+          :span="item.itemAttrs.col || 24"
+        >
+          <el-form-item
+            v-if="item._ifRender"
+            :key="index + item.attrs.key || item.slot"
+            v-bind="item.itemAttrs || {}"
+            :prop="item.attrs.key"
+          >
+            <slot v-if="item.slot" :name="item.slot" :scope="Model" />
+            <component
+              v-else
+              :is="item.tag"
+              :class="item.attrs.className"
+              v-model="Model[item.attrs.key]"
+              v-bind="item.attrs || {}"
+              v-on="item.listeners || {}"
+            />
+          </el-form-item>
+        </component>
+      </template>
+      <component :is="inline ? 'span' : 'el-col'" :span="btnCol">
+        <el-form-item>
+          <slot name="actions" />
+          <el-button v-if="!!submitLabel" type="primary" @click="handleSubmit">{{ submitLabel }}</el-button>
+          <el-button v-if="resetLabel" type="info" @click="handleReset">{{ resetLabel }}</el-button>
+        </el-form-item>
+      </component>
+    </el-row>
   </el-form>
 </template>
 
@@ -47,7 +53,7 @@ import BaseCheckboxGroup from '../BaseCheckboxGroup'
 import BaseRadioGroup from '../BaseRadioGroup'
 import BaseSelect from '../BaseSelect'
 
-const form = Symbol("form"); //保证每个实例有独一无二的标志位
+const form = Symbol("form") //保证每个实例有独一无二的标志位
 
 export default {
   name: "MForm",
@@ -56,28 +62,46 @@ export default {
     BaseRadioGroup,
     BaseSelect
   },
+  model: {
+    prop: 'value',
+    event: 'change'
+  },
   props: {
     formItems: {
       type: Array,
       required: true
     },
-    submit: {
+    inline: {
       type: Boolean,
-      default: true
+      default: false
     },
-    reset: {
-      type: Boolean,
-      default: true
-    },
-    //接口函数
-    api: {
-      type: Function,
+    formName: {
+      type: String,
       required: true
     },
-    //传入mergeForm允许父组件修改内部Model对象
-    mergeForm: {
-      type: Object,
-      default: () => {}
+    labelWitdh: {
+      type: String,
+      default: 'auto'
+    },
+    size: {
+      type: String,
+      default: 'small'
+    },
+    submitLabel: {
+      type: [ Boolean, String ],
+      default: '提交'
+    },
+    resetLabel: {
+      type: [ Boolean, String ],
+      default: '重置'
+    },
+    gutter: {
+      type: Number,
+      default: 24
+    },
+    btnCol: {
+      type: Number,
+      default: 24
     }
   },
   data() {
@@ -91,42 +115,33 @@ export default {
     //根据formItem计算出实际需要让页面渲染的真正的_formItem数据
     _formItems() {
       //this.Model中的值改变触发computed
-      let _formItems = [];
-      _formItems = this.formItems.map(item =>
-        this.computeFormItem(item, this.Model)
-      );
-      return _formItems;
+      let _formItems = []
+      _formItems = this.formItems.map(item => {
+        this.$emit('change', this.Model)
+        return this.computeFormItem(item, this.Model)
+      })
+      return _formItems
     },
     showMessage() {
-      return this.$attrs["show-message"] !== false;
+      return this.$attrs["show-message"] !== false
     },
     statusIcon() {
-      return this.$attrs["status-icon"] !== false;
+      return this.$attrs["status-icon"] !== false
     },
-    inline() {
-      return this.$attrs.inline !== false;
-    }
   },
   watch: {
     //使用watch观察父组件传入的formItems,初始化Model对象(只调用一次)
     formItems: {
       handler() {
         this.formItems.forEach(formItem => {
-          if (!formItem.attrs || !formItem.attrs.key) return; //跳过没有key的属性(插槽)
+          if (!formItem.attrs || !formItem.attrs.key) return //跳过没有key的属性(插槽)
           this.$set(
             this.Model,
             formItem.attrs.key,
             formItem.attrs.value ? formItem.attrs.value : ""
-          );
-        });
-        this.originModel = JSON.parse(JSON.stringify(this.Model));
-      },
-      deep: true,
-      immediate: true
-    },
-    mergeForm: {
-      handler() {
-        this.mergeModel()
+          )
+        })
+        this.originModel = JSON.parse(JSON.stringify(this.Model))
       },
       deep: true,
       immediate: true
@@ -134,57 +149,52 @@ export default {
   },
   mounted() {
     //代理父组件的mergeForm属性
-    let parentComponent = findComponentUpwardByProp(this, "mergeForm")
-    if (parentComponent) {
-      parentComponent.mergeForm = proxyProp(parentComponent.mergeForm)
-    } else {
-      throw new Error("can not find parentComponent");
-    }
+    // let parentComponent = findComponentUpwardByProp(this, this.formName)
+    // if (parentComponent) {
+    //   parentComponent[this.formName] = proxyProp(parentComponent[this.formName])
+    // } else {
+    //   throw new Error("can not find parentComponent");
+    // }
     //mounted钩子中formItems是空数组,所以不在mounted里面操作formItems
   },
   methods: {
     computeFormItem(formItem, Model) {
-      const item = { ...formItem };
+      const item = { ...formItem }
       // 表单控件的类型
-      let tag = item.tag || "input";
+      console.log(item)
+      let tag = item.tag || "input"
       // 对应到组件映射表
-      let basicItem = basic[tag];
-      item.tag = basicItem.component;
+      let basicItem = basic[tag]
+      item.tag = basicItem.component
       //继承基类的属性
-      item.attrs = Object.assign({}, basicItem.attrs, item.attrs);
+      item.attrs = Object.assign({}, basicItem.attrs, item.attrs)
       // 获取动态 Attributes
-      if (item.getAttrs)
-        item.attrs = Object.assign(item.attrs, item.getAttrs(Model));
+      if (item.getAttrs){
+        item.attrs = Object.assign(item.attrs, item.getAttrs(Model))
+      }
       // 条件渲染
-      item._ifRender = item.ifRender ? item.ifRender(Model) : true;
+      item._ifRender = item.ifRender ? item.ifRender(Model) : true
       // 防止表单提交时存在多余 key
       if (!item._ifRender) {
-        delete Model[item.attrs.key];
+        delete Model[item.attrs.key]
       }
       // form-item 配置
-      return item;
+      return item
     },
-    mergeModel() {
-      Object.assign(this.Model, this.mergeForm);
-    },
-
     //提交按钮
     handleSubmit() {
-      this.$refs[form].validate(async (valid, invalidFields) => {
-        console.log(invalidFields);
-        if (valid) {
-          try {
-            let res = await this.api(this.Model);
-            this.$emit("after-submit", res);
-          } catch (e) {
-            console.log(e);
-          }
+      this.$refs[form].validate((valid, invalidFields) => {
+        console.log(invalidFields)
+        if(!valid) {
+          this.$message.error('请填写相关项目')
+          return
         }
-      });
+        this.$emit('on-submit')
+      })
     },
     handleReset() {
-      this.Model = JSON.parse(JSON.stringify(this.originModel));
+      this.Model = JSON.parse(JSON.stringify(this.originModel))
     }
   }
-};
+}
 </script>

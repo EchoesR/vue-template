@@ -1,5 +1,5 @@
 <doc>
-  @author: yuezhonghao
+  @author: ***
   @title: 测试组件
   @desp:
          1，保持template、script、style这个顺序

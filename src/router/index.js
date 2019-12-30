@@ -83,14 +83,14 @@ export const routes = [
       icon: 'eye-open'
     },
     children: [
-      {
-        path: 'index',
-        name: 'example',
-        component: () => import('@/views/example/index'),
-        meta: {
-          title: '实例'
-        },
-      },
+      // {
+      //   path: 'index',
+      //   name: 'example',
+      //   component: () => import('@/views/example/index'),
+      //   meta: {
+      //     title: '实例'
+      //   },
+      // },
       {
         path: 'table',
         name: 'tablePage',

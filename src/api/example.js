@@ -5,7 +5,7 @@ export function radioGroup(query) {
     url: "/radioGroup",
     method: "get",
     params: query
-  });
+  })
 }
 
 export function cascader(query) {
@@ -13,7 +13,7 @@ export function cascader(query) {
     url: "/cascader",
     method: "get",
     params: query
-  });
+  })
 }
 
 export function formApi(query) {
@@ -21,5 +21,5 @@ export function formApi(query) {
     url: "/form",
     method: "post",
     data: query
-  });
+  })
 }
